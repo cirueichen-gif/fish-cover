@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>翻唱小網頁 · 蘭音</title>
+<style>
+  :root{
+    --bg:#0d1117; --card:#161b22; --line:#243044; --txt:#e6edf3;
+    --dim:#8b949e; --acc:#4fc3f7; --acc2:#7ee787; --warn:#f0883e; --bad:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:radial-gradient(1200px 600px at 50% -10%,#16263d,var(--bg));
+    color:var(--txt); font:15px/1.7 "Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px;letter-spacing:.5px}
+  h1 span{color:var(--dim);font-size:13px;font-weight:400;margin-left:8px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  #drop{
+    border:2px dashed #2d3f5c;border-radius:12px;padding:34px 16px;text-align:center;
+    cursor:pointer;transition:.15s;background:#111823;
+  }
+  #drop:hover,#drop.over{border-color:var(--acc);background:#13233a}
+  #drop b{color:var(--acc)}
+  .file{font-size:13px;color:var(--dim);margin-top:8px;word-break:break-all}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  label.f{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;letter-spacing:.4px}
+  select,input[type=number]{
+    width:100%;background:#0d1520;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:9px 10px;font-size:14px;outline:none;
+  }
+  select:focus,input:focus{border-color:var(--acc)}
+  .row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+  button{
+    background:linear-gradient(180deg,#1f6feb,#1a5fd0);color:#fff;border:0;border-radius:10px;
+    padding:11px 22px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.5px;
+  }
+  button:hover{filter:brightness(1.12)}
+  button:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  button.ghost{background:#0d1520;border:1px solid var(--line);color:var(--dim);font-weight:400;padding:9px 14px;font-size:13px}
+  .hint{font-size:12px;color:var(--dim);margin-top:6px}
+  .bar{height:9px;background:#0d1520;border-radius:6px;overflow:hidden;margin:12px 0 8px}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#1f6feb,#4fc3f7);transition:width .4s}
+  .stage{display:flex;justify-content:space-between;font-size:13px}
+  .stage b{color:var(--acc)}
+  .msg{font-size:12px;color:var(--dim);margin-top:6px;min-height:18px;word-break:break-all}
+  pre{background:#0d1520;border:1px solid var(--line);border-radius:9px;padding:10px;
+      font-size:12px;color:#ffb4a8;overflow:auto;max-height:220px;white-space:pre-wrap}
+  audio{width:100%;margin-top:10px}
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .links a{
+    font-size:13px;color:var(--acc);text-decoration:none;border:1px solid var(--line);
+    border-radius:8px;padding:7px 12px;background:#0d1520;
+  }
+  .links a:hover{border-color:var(--acc)}
+  .hist{font-size:13px}
+  .hist .it{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed #1e2a3d}
+  .hist .it:last-child{border:0}
+  .hist .it span{color:var(--dim);font-size:12px}
+  .hist a{color:var(--acc2);text-decoration:none}
+  .ok{color:var(--acc2)} .bad{color:var(--bad)}
+  .tag{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--dim)}
+  .spinner{
+    display:inline-block;width:13px;height:13px;
+    border:2px solid rgba(79,195,247,.25);border-top-color:var(--acc);
+    border-radius:50%;animation:spin .75s linear infinite;
+    vertical-align:-2px;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>翻唱小網頁<span>蘭音 v6 · 分軌 → 換嗓 → 混音</span></h1>
+  <div class="sub">丟一首歌進來就好。整首帶伴奏的沒關係，會自己拆。</div>
+
+  <div class="card">
+    <div id="drop">
+      <div>把歌拖進來，或 <b>點這裡選檔</b></div>
+      <div class="hint">mp3 / wav / flac / m4a / webm，上限 200MB</div>
+      <div class="file" id="fname">還沒選檔</div>
+    </div>
+    <input type="file" id="pick" accept="audio/*,video/*" hidden>
+
+    <div style="display:flex;align-items:center;margin:14px 0 10px;gap:10px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <span style="font-size:12px;color:var(--dim)">或貼網址直接抓</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="urlInput" placeholder="貼上 B 站（BV號／影片連結／b23短網址）或 YouTube 網址…" style="flex:1;background:#0d1520;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;outline:none">
+      <button id="fetchBtn" class="ghost" style="white-space:nowrap;padding:9px 18px">抓取音訊</button>
+    </div>
+    <div id="urlHint" class="hint" style="min-height:16px;margin-top:6px"></div>
+
+    <div class="grid" style="margin-top:18px">
+      <div>
+        <label class="f">嗓子</label>
+        <select id="model"></select>
+      </div>
+      <div>
+        <label class="f">升／降 key（半音）</label>
+        <input type="number" id="pitch" value="0" min="-24" max="24" step="1">
+        <div class="hint">男聲升 12 會變女聲；不確定就按「量一下音高」。</div>
+      </div>
+      <div>
+        <label class="f">分軌模型</label>
+        <select id="sep">
+          <option value="kim">Kim Vocal 2（快）</option>
+          <option value="mdx23c">MDX23C HQ（慢、乾淨）</option>
+        </select>
+      </div>
+      <div>
+        <label class="f">修音準</label>
+        <select id="autotune">
+          <option value="0">不修（原樣換嗓）</option>
+          <option value="1">修（autotune，走音會變準）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="go" disabled>開始翻唱</button>
+      <button id="analyze" class="ghost" disabled>量一下音高</button>
+      <span class="hint" id="ahint"></span>
+      <span class="hint" id="vram" style="margin-left:auto"></span>
+    </div>
+  </div>
+
+  <div class="card" id="progcard" style="display:none">
+    <div class="stage"><span>進度</span><b id="pct">0%</b></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="stage"><span id="stage">排隊中</span><span id="elapsed" class="hint"></span></div>
+    <div class="msg" id="msg"></div>
+    <pre id="err" style="display:none"></pre>
+  </div>
+
+  <div class="card" id="result" style="display:none">
+    <div class="stage" style="margin-bottom:4px"><span class="ok">好了</span><span class="hint" id="resultmeta"></span></div>
+    <audio id="player" controls preload="none"></audio>
+    <div class="links" id="links"></div>
+  </div>
+
+  <div class="card">
+    <div class="stage" style="margin-bottom:8px"><span>之前的</span><span class="hint">存在 10_翻唱\work\</span></div>
+    <div class="hist" id="hist"><span class="hint">還沒有</span></div>
+  </div>
+</div>
+
+<script>
+let file = null, jobId = null, timer = null, startedAt = 0;
+const $ = s => document.querySelector(s);
+
+function fmtTime(s){ const m = Math.floor(s/60), r = Math.round(s%60); return m? `${m} 分 ${r} 秒` : `${r} 秒`; }
+
+async function init(){
+  const sel = $('#model');
+  if (location.protocol === 'file:') {
+    sel.innerHTML = '<option value="">（請先雙擊 run_cover.bat）</option>';
+    const sub = $('.sub');
+    if (sub) {
+      sub.innerHTML = '<b style="color:var(--bad)">⚠️ 你直接點開了 html 檔！不能這樣開，後端沒跑會抓不到嗓子。請回資料夾雙擊執行 run_cover.bat，從本機網址（http://127.0.0.1:6970）打開。</b>';
+    }
+    return;
+  }
+  let r;
+  try {
+    r = await fetch('/api/init').then(res=>res.json());
+  } catch(e) {
+    sel.innerHTML = '<option value="">（伺服器未啟動，請開 run_cover.bat）</option>';
+    const sub = $('.sub');
+    if (sub) {
+      sub.innerHTML = '<b style="color:var(--bad)">⚠️ 連不上後端伺服器！請確認 run_cover.bat 黑色視窗有沒有開著。</b>';
+    }
+    return;
+  }
+  sel.innerHTML = '';
+  (r.models||[]).forEach(m=>{
+    const o = document.createElement('option');
+    o.value = m.file;
+    o.textContent = m.label || m.file;
+    o.title = `${m.file} · ${m.size_mb} MB`;
+    if (m.default) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (!r.models || !r.models.length){
+    sel.innerHTML = '<option>（logs 裡沒有模型）</option>';
+    $('#go').disabled = true;
+  }
+  if (r.vram){
+    const v = r.vram;
+    const el = $('#vram');
+    el.textContent = `顯存 ${v.free_mb} / ${v.total_mb} MB 可用`;
+    el.className = v.free_mb < 2500 ? 'hint bad' : 'hint';
+  }
+  renderHist(r.recent||[]);
+}
+
+function renderHist(list){
+  const box = $('#hist');
+  if (!list.length){ box.innerHTML = '<span class="hint">還沒有</span>'; return; }
+  box.innerHTML = list.map(j=>{
+    const ok = j.status === '完成';
+    const nm = (j.name||'').replace(/\.[^.]+$/,'');
+    const when = new Date((j.created||0)*1000).toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const link = ok && j.result
+      ? `<a href="/files/${j.id}/${j.result.cover}">${nm}</a>`
+      : `<span>${nm}</span>`;
+    const tag = ok ? `<span class="tag">${j.result.model||''} · ${j.result.pitch>=0?'+':''}${j.result.pitch} · ${fmtTime(j.result.seconds||0)}</span>`
+                   : `<span class="tag bad">${j.status}${j.error?': '+j.error.slice(0,40):''}</span>`;
+    return `<div class="it"><div>${link}</div><div>${tag}<span style="margin-left:8px">${when}</span></div></div>`;
+  }).join('');
+}
+
+/* ---------------- 選檔 ---------------- */
+const drop = $('#drop'), pick = $('#pick');
+drop.onclick = ()=>pick.click();
+['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop', ev=>{ if(ev.dataTransfer.files.length) setFile(ev.dataTransfer.files[0]); });
+pick.onchange = ()=>{ if(pick.files.length) setFile(pick.files[0]); };
+
+function setFile(f){
+  file = f;
+  $('#fname').textContent = `${f.name} · ${(f.size/1048576).toFixed(1)} MB`;
+  $('#go').disabled = false;
+  $('#analyze').disabled = false;
+  $('#ahint').textContent = '';
+  $('#result').style.display = 'none';
+}
+
+/* ---------------- 貼網址抓取 ---------------- */
+const urlInput = $('#urlInput'), fetchBtn = $('#fetchBtn'), urlHint = $('#urlHint');
+urlInput.onkeydown = e => { if (e.key === 'Enter') fetchBtn.click(); };
+
+fetchBtn.onclick = async ()=>{
+  const u = (urlInput.value || '').trim();
+  if (!u) {
+    urlHint.textContent = '請先輸入網址或 BV 號';
+    return;
+  }
+  fetchBtn.disabled = true;
+  fetchBtn.innerHTML = '<i class="spinner"></i>抓取中…';
+  urlHint.innerHTML = '<i class="spinner"></i>正在解析並下載音訊，請稍候…';
+  try {
+    const r = await fetch('/api/fetch_url', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ url: u }),
+    }).then(res=>res.json());
+
+    if (r.error) {
+      throw new Error(r.error);
+    }
+    urlHint.innerHTML = '<i class="spinner"></i>音訊下載完成，正在載入…';
+    const blob = await fetch(r.download_url).then(res=>res.blob());
+    const fetchedFile = new File([blob], r.filename, { type: blob.type || 'audio/mpeg' });
+    setFile(fetchedFile);
+    urlHint.textContent = `已成功載入【${r.source === 'bilibili' ? 'B站' : 'YouTube'}】${r.title}`;
+  } catch(e) {
+    urlHint.textContent = '抓取失敗: ' + (e.message || e);
+  } finally {
+    fetchBtn.disabled = false;
+    fetchBtn.textContent = '抓取音訊';
+  }
+};
+
+/* ---------------- 量音高 ---------------- */
+$('#analyze').onclick = async ()=>{
+  if (!file) return;
+  const btn = $('#analyze');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="spinner"></i>量音高…';
+  $('#ahint').innerHTML = '<i class="spinner"></i>正在分析中位音高，請稍候…';
+  try{
+    const r = await fetch('/api/analyze', {method:'POST', body:file}).then(r=>r.json());
+    if (r.median_hz){
+      $('#pitch').value = r.suggest_pitch;
+      $('#ahint').textContent = `${r.note} → 建議 ${r.suggest_pitch>=0?'+':''}${r.suggest_pitch}`;
+    } else {
+      $('#ahint').textContent = r.error || '量不出來';
+    }
+  } catch(e){
+    $('#ahint').textContent = '量失敗';
+  } finally {
+    btn.textContent = '量一下音高';
+    btn.disabled = false;
+  }
+};
+
+/* ---------------- 開始 ---------------- */
+$('#go').onclick = async ()=>{
+  if (!file) return;
+  const goBtn = $('#go');
+  goBtn.disabled = true;
+  goBtn.innerHTML = '<i class="spinner"></i>上傳中…';
+  $('#result').style.display = 'none';
+  $('#err').style.display = 'none';
+  $('#progcard').style.display = 'block';
+  startedAt = Date.now();
+  const q = new URLSearchParams({
+    name: file.name,
+    model: $('#model').value,
+    pitch: $('#pitch').value || '0',
+    sep: $('#sep').value,
+    autotune: $('#autotune').value,
+  });
+  try{
+    const r = await fetch('/api/upload?' + q.toString(), {method:'POST', body:file}).then(r=>r.json());
+    if (r.error){ throw new Error(r.error); }
+    jobId = r.job.id;
+    goBtn.textContent = '處理中…';
+    poll();
+    timer = setInterval(poll, 1000);
+  }catch(e){
+    showErr(e.message);
+    goBtn.textContent = '開始翻唱';
+    goBtn.disabled = false;
+  }
+};
+
+function showErr(t){
+  const e = $('#err'); e.style.display='block'; e.textContent = t;
+}
+
+async function poll(){
+  if (!jobId) return;
+  let j;
+  try { j = await fetch('/api/job/' + jobId).then(r=>r.json()); }
+  catch(e){ return; }
+  $('#pct').textContent = (j.pct||0) + '%';
+  $('#bar').style.width = (j.pct||0) + '%';
+  $('#stage').textContent = j.stage || j.status || '';
+  $('#msg').textContent = j.msg || '';
+  $('#elapsed').textContent = '已跑 ' + fmtTime((Date.now()-startedAt)/1000);
+
+  if (j.status === '完成' || j.status === '失敗' || (j.result && !j.error)){
+    clearInterval(timer); timer = null;
+    $('#go').disabled = false;
+    $('#go').textContent = '開始翻唱';
+    $('#elapsed').textContent = '花 ' + fmtTime(j.result ? j.result.seconds : (Date.now()-startedAt)/1000);
+    if (j.status === '完成' && j.result) showResult(j);
+    else { showErr(j.error || '失敗'); }
+    fetch('/api/init').then(r=>r.json()).then(r=>renderHist(r.recent||[]));
+  }
+}
+
+function showResult(j){
+  const r = j.result;
+  $('#result').style.display = 'block';
+  $('#resultmeta').textContent = `${r.model} · ${r.pitch>=0?'+':''}${r.pitch} 半音 · 全程 ${fmtTime(r.seconds)}`;
+  $('#player').src = `/files/${j.id}/${r.cover}`;
+  $('#links').innerHTML = [
+    `<a href="/files/${j.id}/${r.cover}?dl=${encodeURIComponent((j.name||'cover').replace(/\.[^.]+$/,''))}_翻唱.mp3">下載 mp3</a>`,
+    `<a href="/files/${j.id}/cover.wav?dl=cover.wav">下載 wav</a>`,
+    `<a href="/files/${j.id}/${r.vocals_fish}?dl=vocals.wav">只聽換嗓後的人聲</a>`,
+  ].join('');
+}
+
+init();
+</script>
+</body>
+</html>

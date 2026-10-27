@@ -1,0 +1,7 @@
+﻿work/
+__pycache__/
+*.pyc
+extra_packages/
+.env
+*.wav
+*.mp3
